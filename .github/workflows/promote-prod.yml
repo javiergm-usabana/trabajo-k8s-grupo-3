@@ -1,7 +1,7 @@
 name: Promote STG to PROD
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: {}
 
 permissions:
   contents: write
