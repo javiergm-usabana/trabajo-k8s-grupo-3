@@ -46,7 +46,7 @@ Write-Host 'Instalando dependencias del proyecto...'
 if ($LASTEXITCODE -ne 0) { throw 'Falló la instalación de dependencias.' }
 
 Write-Host 'Ejecutando pruebas...'
-& pnpm test -- --runInBand
+& pnpm exec jest --runInBand
 if ($LASTEXITCODE -ne 0) { throw 'Las pruebas fallaron.' }
 
 Write-Host 'Compilando NestJS...'

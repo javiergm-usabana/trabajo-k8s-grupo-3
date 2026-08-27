@@ -29,7 +29,7 @@ jobs:
           node-version: 20
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm test -- --runInBand
+      - run: pnpm exec jest --runInBand
       - run: pnpm run build
       - uses: azure/setup-helm@v4
       - run: helm lint ./helm/kubescope
