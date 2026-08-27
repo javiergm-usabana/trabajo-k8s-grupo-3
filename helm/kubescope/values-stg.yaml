@@ -1,8 +1,8 @@
 replicaCount: 2
 
 image:
-  repository: ghcr.io/OWNER/kubescope
-  tag: replace-with-commit-sha
+  repository: "ghcr.io/javierg90/kubescope"
+  tag: "4e0a45c"
   pullPolicy: IfNotPresent
 
 imagePullSecrets:
@@ -10,7 +10,7 @@ imagePullSecrets:
 
 app:
   environment: staging
-  version: replace-with-commit-sha
+  version: "4e0a45c"
   message: KubeScope - Staging
   featureExperimental: false
 
