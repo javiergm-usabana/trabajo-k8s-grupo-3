@@ -1,8 +1,8 @@
 replicaCount: 1
 
 image:
-  repository: kubescope
-  tag: local
+  repository: ghcr.io/javierg90/kubescope
+  tag: "4e0a45c"
   pullPolicy: Never
 
 imagePullSecrets:
@@ -10,7 +10,7 @@ imagePullSecrets:
 
 app:
   environment: dev
-  version: local
+  version: "4e0a45c"
   message: KubeScope - Development
   featureExperimental: true
 
