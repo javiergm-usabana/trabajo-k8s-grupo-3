@@ -1,0 +1,25 @@
+services:
+  kubescope:
+    container_name: kubescope-local
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: kubescope:local
+    ports:
+      - "3000:3000"
+    environment:
+      APP_NAME: kubescope
+      APP_ENV: local
+      APP_VERSION: compose
+      APP_MESSAGE: KubeScope - Docker Compose
+      FEATURE_EXPERIMENTAL: "true"
+      POD_NAME: docker-compose
+      POD_NAMESPACE: local
+      NODE_NAME: docker-desktop
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:3000/health"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+      start_period: 10s

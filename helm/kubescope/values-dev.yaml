@@ -1,0 +1,30 @@
+replicaCount: 1
+
+image:
+  repository: kubescope
+  tag: local
+  pullPolicy: Never
+
+imagePullSecrets:
+  - name: ghcr-credentials
+
+app:
+  environment: dev
+  version: local
+  message: KubeScope - Development
+  featureExperimental: true
+
+ingress:
+  enabled: true
+  host: dev.kubescope.local
+
+resources:
+  requests:
+    cpu: 25m
+    memory: 48Mi
+  limits:
+    cpu: 150m
+    memory: 128Mi
+
+autoscaling:
+  enabled: false

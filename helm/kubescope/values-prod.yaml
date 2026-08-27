@@ -1,0 +1,33 @@
+replicaCount: 3
+
+image:
+  repository: ghcr.io/OWNER/kubescope
+  tag: replace-with-commit-sha
+  pullPolicy: IfNotPresent
+
+imagePullSecrets:
+  - name: ghcr-credentials
+
+app:
+  environment: production
+  version: replace-with-commit-sha
+  message: KubeScope - Production
+  featureExperimental: false
+
+ingress:
+  enabled: true
+  host: kubescope.local
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 60

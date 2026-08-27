@@ -1,0 +1,16 @@
+{
+  "terminal.integrated.cwd": "${workspaceFolder}",
+  "terminal.integrated.defaultProfile.windows": "PowerShell KubeScope",
+  "terminal.integrated.profiles.windows": {
+    "PowerShell KubeScope": {
+      "source": "PowerShell",
+      "args": [
+        "-NoExit",
+        "-ExecutionPolicy",
+        "Bypass"
+      ],
+      "icon": "terminal-powershell"
+    }
+  },
+  "terminal.integrated.inheritEnv": true
+}

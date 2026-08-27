@@ -1,0 +1,57 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "KubeScope: preparar terminal",
+      "type": "shell",
+      "command": "${workspaceFolder}\\setup-vscode.ps1",
+      "problemMatcher": []
+    },
+    {
+      "label": "KubeScope: Docker Compose up",
+      "type": "shell",
+      "command": "docker compose up --build",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "KubeScope: Docker Compose down",
+      "type": "shell",
+      "command": "docker compose down",
+      "problemMatcher": []
+    },
+    {
+      "label": "KubeScope: desplegar todo en Minikube",
+      "type": "shell",
+      "command": "${workspaceFolder}\\deploy-minikube.ps1",
+      "problemMatcher": []
+    },
+    {
+      "label": "KubeScope: recrear Minikube y desplegar todo",
+      "type": "shell",
+      "command": "${workspaceFolder}\\deploy-minikube.ps1 -RecreateCluster",
+      "problemMatcher": []
+    },
+    {
+      "label": "KubeScope: abrir NGINX en 8888",
+      "type": "shell",
+      "command": "kubectl port-forward service/ingress-nginx-controller 8888:80 -n ingress-nginx",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "KubeScope: abrir Prometheus en 9090",
+      "type": "shell",
+      "command": "kubectl port-forward service/prometheus-server 9090:80 -n monitoring",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "KubeScope: abrir ArgoCD en 8082",
+      "type": "shell",
+      "command": "kubectl port-forward service/argocd-server 8082:80 -n argocd",
+      "isBackground": true,
+      "problemMatcher": []
+    }
+  ]
+}

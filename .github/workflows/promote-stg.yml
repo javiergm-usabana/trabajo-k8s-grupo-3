@@ -1,0 +1,26 @@
+name: Promote DEV to STG
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node scripts/promote-image.mjs helm/kubescope/values-dev.yaml helm/kubescope/values-stg.yaml
+      - name: Commit promotion
+        shell: bash
+        run: |
+          TAG=$(awk '/^image:/{found=1} found && /^  tag:/{gsub(/[" ]/, "", $2); print $2; exit}' helm/kubescope/values-stg.yaml)
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add helm/kubescope/values-stg.yaml
+          git commit -m "chore: promote ${TAG} to staging [skip ci]"
+          git push

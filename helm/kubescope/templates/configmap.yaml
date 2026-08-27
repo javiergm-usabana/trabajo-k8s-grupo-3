@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "kubescope.fullname" . }}
+  labels:
+    {{- include "kubescope.labels" . | nindent 4 }}
+data:
+  APP_NAME: {{ .Values.app.name | quote }}
+  APP_ENV: {{ .Values.app.environment | quote }}
+  APP_VERSION: {{ .Values.app.version | quote }}
+  APP_MESSAGE: {{ .Values.app.message | quote }}
+  FEATURE_EXPERIMENTAL: {{ .Values.app.featureExperimental | quote }}

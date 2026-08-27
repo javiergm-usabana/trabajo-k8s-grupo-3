@@ -1,0 +1,44 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: kubescope
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - environment: dev
+            namespace: kubescope-dev
+            valuesFile: values-dev.yaml
+          - environment: stg
+            namespace: kubescope-stg
+            valuesFile: values-stg.yaml
+          - environment: prod
+            namespace: kubescope-prod
+            valuesFile: values-prod.yaml
+  template:
+    metadata:
+      name: kubescope-{{environment}}
+      labels:
+        app.kubernetes.io/name: kubescope
+        app.kubernetes.io/environment: '{{environment}}'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/javierg90/trabajo-k8s-grupo-3.git
+        targetRevision: main
+        path: helm/kubescope
+        helm:
+          releaseName: kubescope-{{environment}}
+          valueFiles:
+            - '{{valuesFile}}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{namespace}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - ApplyOutOfSyncOnly=true
