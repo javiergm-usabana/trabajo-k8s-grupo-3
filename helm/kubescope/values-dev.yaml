@@ -10,7 +10,7 @@ imagePullSecrets:
 
 app:
   environment: dev
-  version: "4e0a45c"
+  version: "a81c8b3"
   message: KubeScope - Development
   featureExperimental: true
 
