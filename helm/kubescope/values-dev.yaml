@@ -3,7 +3,7 @@ replicaCount: 1
 image:
   repository: ghcr.io/javierg90/kubescope
   tag: "4e0a45c"
-  pullPolicy: Never
+  pullPolicy: IfNotPresent
 
 imagePullSecrets:
   - name: ghcr-credentials
