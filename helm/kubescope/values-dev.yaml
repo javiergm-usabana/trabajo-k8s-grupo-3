@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: ghcr.io/javiergm-usabana/kubescope
-  tag: "459ea30"
+  tag: "d3d52e2"
   pullPolicy: IfNotPresent
 
 imagePullSecrets:
@@ -10,7 +10,7 @@ imagePullSecrets:
 
 app:
   environment: dev
-  version: "459ea30"
+  version: "d3d52e2"
   message: KubeScope - Development
   featureExperimental: true
 
