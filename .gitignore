@@ -5,3 +5,7 @@ coverage/
 .env
 npm-debug.log*
 .DS_Store
+
+# Material auxiliar local para grabar el video
+VIDEO-GRABACION.md
+scripts/video-*.ps1
