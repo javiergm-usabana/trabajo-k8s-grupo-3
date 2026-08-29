@@ -1,7 +1,7 @@
 replicaCount: 3
 
 image:
-  repository: "ghcr.io/javierg90/kubescope"
+  repository: "ghcr.io/javiergm-usabana/kubescope"
   tag: "4e0a45c"
   pullPolicy: IfNotPresent
 

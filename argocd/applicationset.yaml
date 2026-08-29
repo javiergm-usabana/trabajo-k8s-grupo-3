@@ -25,7 +25,7 @@ spec:
     spec:
       project: default
       source:
-        repoURL: https://github.com/javierg90/trabajo-k8s-grupo-3.git
+        repoURL: https://github.com/javiergm-usabana/trabajo-k8s-grupo-3.git
         targetRevision: main
         path: helm/kubescope
         helm:

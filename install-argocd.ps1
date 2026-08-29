@@ -1,13 +1,13 @@
 [CmdletBinding()]
 param(
     [ValidatePattern('^https://github\.com/.+/.+(\.git)?$')]
-    [string]$RepoUrl = 'https://github.com/javierg90/trabajo-k8s-grupo-3.git',
+    [string]$RepoUrl = 'https://github.com/javiergm-usabana/trabajo-k8s-grupo-3.git',
 
     [string]$Revision = 'main',
 
     [string]$ChartVersion = '10.4.0',
 
-    [string]$GitHubUsername = 'javierg90',
+    [string]$GitHubUsername = 'javiergm-usabana',
 
     [SecureString]$GitHubToken
 )
