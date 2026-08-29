@@ -7,6 +7,7 @@ export interface RuntimeInfo {
   pod: string;
   namespace: string;
   node: string;
+  delivery: string;
 }
 
 @Injectable()
@@ -19,6 +20,7 @@ export class RuntimeService {
       pod: process.env.POD_NAME ?? 'local',
       namespace: process.env.POD_NAMESPACE ?? 'local',
       node: process.env.NODE_NAME ?? 'local',
+      delivery: 'GitOps con GitHub Actions',
     };
   }
 }
