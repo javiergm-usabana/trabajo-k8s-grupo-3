@@ -27,6 +27,7 @@ function Initialize-ToolPath {
     $toolDirectories = @(
         'C:\Program Files\Docker\Docker\resources\bin',
         'C:\Program Files\Kubernetes\Minikube',
+        'C:\Program Files\ArgoCD',
         (Join-Path $env:LOCALAPPDATA 'Microsoft\WinGet\Links'),
         (Join-Path $env:LOCALAPPDATA 'Microsoft\WindowsApps'),
         (Join-Path $env:USERPROFILE 'scoop\shims'),
@@ -117,6 +118,7 @@ $requiredTools = @(
     @{ Name = 'minikube'; WinGetId = 'Kubernetes.minikube' },
     @{ Name = 'kubectl';  WinGetId = 'Kubernetes.kubectl' },
     @{ Name = 'helm';     WinGetId = 'Helm.Helm' }
+    @{ Name = 'argocd';   WinGetId = 'argoproj.argocd' }
 )
 
 foreach ($tool in $requiredTools) {

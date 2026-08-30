@@ -9,7 +9,9 @@ param(
 
     [string]$GitHubUsername = 'javiergm-usabana',
 
-    [SecureString]$GitHubToken
+    [SecureString]$GitHubToken,
+
+    [switch]$SkipToolInstallation
 )
 
 $ErrorActionPreference = 'Stop'
@@ -18,10 +20,75 @@ $valuesPath = Join-Path $projectRoot 'argocd\argocd-values.yaml'
 $applicationSetPath = Join-Path $projectRoot 'argocd\applicationset.yaml'
 $renderedApplicationSet = Join-Path ([System.IO.Path]::GetTempPath()) 'kubescope-applicationset.yaml'
 
-foreach ($command in @('helm', 'kubectl')) {
-    if (-not (Get-Command $command -ErrorAction SilentlyContinue)) {
-        throw "No se encontro '$command' en PATH."
+function Initialize-ToolPath {
+    $toolDirectories = @(
+        'C:\Program Files\Docker\Docker\resources\bin',
+        'C:\Program Files\Kubernetes\Minikube',
+        'C:\Program Files\ArgoCD',
+        (Join-Path $env:LOCALAPPDATA 'Microsoft\WinGet\Links'),
+        (Join-Path $env:LOCALAPPDATA 'Microsoft\WindowsApps'),
+        (Join-Path $env:USERPROFILE 'scoop\shims'),
+        'C:\ProgramData\chocolatey\bin'
+    )
+
+    foreach ($directory in $toolDirectories) {
+        if ((Test-Path -LiteralPath $directory) -and
+            (($env:Path -split ';') -notcontains $directory)) {
+            $env:Path += ";$directory"
+        }
     }
+}
+
+function Update-ProcessPath {
+    $pathEntries = @(
+        ($env:Path -split ';')
+        ([Environment]::GetEnvironmentVariable('Path', 'User') -split ';')
+        ([Environment]::GetEnvironmentVariable('Path', 'Machine') -split ';')
+    ) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+
+    $env:Path = ($pathEntries | Select-Object -Unique) -join ';'
+    Initialize-ToolPath
+}
+
+function Ensure-Command {
+    param(
+        [Parameter(Mandatory)][string]$Name,
+        [Parameter(Mandatory)][string]$WinGetId
+    )
+
+    if (Get-Command $Name -ErrorAction SilentlyContinue) {
+        Write-Host "[OK] $Name disponible." -ForegroundColor Green
+        return
+    }
+
+    if ($SkipToolInstallation) {
+        throw "No se encontro '$Name' y se omitio la instalacion automatica."
+    }
+
+    if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
+        throw "No se encontro '$Name' ni WinGet. Instala App Installer desde Microsoft Store."
+    }
+
+    Write-Host "Instalando herramienta requerida: $Name ($WinGetId)..." -ForegroundColor Yellow
+    & winget install --id $WinGetId --exact --silent --accept-package-agreements --accept-source-agreements
+    if ($LASTEXITCODE -ne 0) { throw "WinGet no pudo instalar '$Name' ($WinGetId)." }
+
+    Update-ProcessPath
+    if (-not (Get-Command $Name -ErrorAction SilentlyContinue)) {
+        throw "'$Name' fue instalado, pero aun no esta disponible. Reinicia VS Code y ejecuta nuevamente este script."
+    }
+}
+
+Initialize-ToolPath
+
+$requiredTools = @(
+    @{ Name = 'helm';    WinGetId = 'Helm.Helm' },
+    @{ Name = 'kubectl'; WinGetId = 'Kubernetes.kubectl' },
+    @{ Name = 'argocd';  WinGetId = 'argoproj.argocd' }
+)
+
+foreach ($tool in $requiredTools) {
+    Ensure-Command -Name $tool.Name -WinGetId $tool.WinGetId
 }
 
 function ConvertTo-Base64 {

@@ -1,18 +1,68 @@
 [CmdletBinding()]
-param()
+param(
+    [switch]$SkipToolInstallation
+)
 
 $ErrorActionPreference = 'Stop'
 $projectRoot = $PSScriptRoot
 
-function Assert-Command {
+function Initialize-ToolPath {
+    $toolDirectories = @(
+        'C:\Program Files\nodejs',
+        'C:\Program Files\Git\cmd',
+        'C:\Program Files\Docker\Docker\resources\bin',
+        'C:\Program Files\Kubernetes\Minikube',
+        'C:\Program Files\ArgoCD',
+        (Join-Path $env:LOCALAPPDATA 'Microsoft\WinGet\Links'),
+        (Join-Path $env:LOCALAPPDATA 'Microsoft\WindowsApps'),
+        (Join-Path $env:USERPROFILE 'scoop\shims'),
+        'C:\ProgramData\chocolatey\bin'
+    )
+
+    foreach ($directory in $toolDirectories) {
+        if ((Test-Path -LiteralPath $directory) -and
+            (($env:Path -split ';') -notcontains $directory)) {
+            $env:Path += ";$directory"
+        }
+    }
+}
+
+function Update-ProcessPath {
+    $pathEntries = @(
+        ($env:Path -split ';')
+        ([Environment]::GetEnvironmentVariable('Path', 'User') -split ';')
+        ([Environment]::GetEnvironmentVariable('Path', 'Machine') -split ';')
+    ) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+
+    $env:Path = ($pathEntries | Select-Object -Unique) -join ';'
+    Initialize-ToolPath
+}
+
+function Ensure-Command {
     param(
         [Parameter(Mandatory)][string]$Name,
-        [Parameter(Mandatory)][string]$InstallHint
+        [Parameter(Mandatory)][string]$WinGetId
     )
 
     $command = Get-Command $Name -ErrorAction SilentlyContinue
     if (-not $command) {
-        throw "No se encontró '$Name'. $InstallHint"
+        if ($SkipToolInstallation) {
+            throw "No se encontro '$Name' y se omitio la instalacion automatica."
+        }
+
+        if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
+            throw "No se encontro '$Name' ni WinGet. Instala App Installer desde Microsoft Store."
+        }
+
+        Write-Host "Instalando herramienta requerida: $Name ($WinGetId)..." -ForegroundColor Yellow
+        & winget install --id $WinGetId --exact --silent --accept-package-agreements --accept-source-agreements
+        if ($LASTEXITCODE -ne 0) { throw "WinGet no pudo instalar '$Name' ($WinGetId)." }
+
+        Update-ProcessPath
+        $command = Get-Command $Name -ErrorAction SilentlyContinue
+        if (-not $command) {
+            throw "'$Name' fue instalado, pero aun no esta disponible. Reinicia VS Code y ejecuta nuevamente este script."
+        }
     }
 
     Write-Host ("[OK] {0}: {1}" -f $Name, $command.Source) -ForegroundColor Green
@@ -20,13 +70,22 @@ function Assert-Command {
 
 Set-Location $projectRoot
 
-Assert-Command node 'Instala Node.js 20 o superior.'
-Assert-Command npm 'Node.js debe incluir npm.'
-Assert-Command docker 'Instala o inicia Docker Desktop.'
-Assert-Command minikube 'Instala Minikube y agrégalo a PATH.'
-Assert-Command kubectl 'Instala kubectl y agrégalo a PATH.'
-Assert-Command helm 'Instala Helm y agrégalo a PATH.'
-Assert-Command git 'Instala Git para Windows.'
+Initialize-ToolPath
+
+$requiredTools = @(
+    @{ Name = 'node';     WinGetId = 'OpenJS.NodeJS.LTS' },
+    @{ Name = 'npm';      WinGetId = 'OpenJS.NodeJS.LTS' },
+    @{ Name = 'docker';   WinGetId = 'Docker.DockerDesktop' },
+    @{ Name = 'minikube'; WinGetId = 'Kubernetes.minikube' },
+    @{ Name = 'kubectl';  WinGetId = 'Kubernetes.kubectl' },
+    @{ Name = 'helm';     WinGetId = 'Helm.Helm' },
+    @{ Name = 'argocd';   WinGetId = 'argoproj.argocd' },
+    @{ Name = 'git';      WinGetId = 'Git.Git' }
+)
+
+foreach ($tool in $requiredTools) {
+    Ensure-Command -Name $tool.Name -WinGetId $tool.WinGetId
+}
 
 $nodeMajor = [int]((& node --version).TrimStart('v').Split('.')[0])
 if ($nodeMajor -lt 20) {
@@ -39,7 +98,9 @@ if (-not (Get-Command pnpm -ErrorAction SilentlyContinue)) {
     if ($LASTEXITCODE -ne 0) { throw 'No se pudo instalar pnpm.' }
 }
 
-Assert-Command pnpm 'Ejecuta npm install --global pnpm@10.17.1.'
+$pnpmCommand = Get-Command pnpm -ErrorAction SilentlyContinue
+if (-not $pnpmCommand) { throw 'pnpm no quedo disponible despues de la instalacion.' }
+Write-Host ("[OK] pnpm: {0}" -f $pnpmCommand.Source) -ForegroundColor Green
 
 Write-Host 'Instalando dependencias del proyecto...'
 & pnpm install --frozen-lockfile
