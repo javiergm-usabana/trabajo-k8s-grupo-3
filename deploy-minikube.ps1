@@ -13,7 +13,9 @@ param(
 
     [string]$PrometheusChartVersion = '29.27.0',
 
-    [switch]$RecreateCluster
+    [switch]$RecreateCluster,
+
+    [switch]$SkipToolInstallation
 )
 
 $ErrorActionPreference = 'Stop'
@@ -21,12 +23,67 @@ $projectRoot = $PSScriptRoot
 $chartPath = Join-Path $projectRoot 'helm\kubescope'
 $prometheusValuesPath = Join-Path $projectRoot 'monitoring\prometheus-values.yaml'
 
-function Assert-Command {
-    param([Parameter(Mandatory)][string]$Name)
+function Initialize-ToolPath {
+    $toolDirectories = @(
+        'C:\Program Files\Docker\Docker\resources\bin',
+        'C:\Program Files\Kubernetes\Minikube',
+        (Join-Path $env:LOCALAPPDATA 'Microsoft\WinGet\Links'),
+        (Join-Path $env:LOCALAPPDATA 'Microsoft\WindowsApps'),
+        (Join-Path $env:USERPROFILE 'scoop\shims'),
+        'C:\ProgramData\chocolatey\bin'
+    )
+
+    foreach ($directory in $toolDirectories) {
+        if ((Test-Path -LiteralPath $directory) -and
+            (($env:Path -split ';') -notcontains $directory)) {
+            $env:Path += ";$directory"
+        }
+    }
+}
+
+function Update-ProcessPath {
+    $pathEntries = @(
+        ($env:Path -split ';')
+        ([Environment]::GetEnvironmentVariable('Path', 'User') -split ';')
+        ([Environment]::GetEnvironmentVariable('Path', 'Machine') -split ';')
+    ) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+
+    $env:Path = ($pathEntries | Select-Object -Unique) -join ';'
+    Initialize-ToolPath
+}
+
+function Ensure-Command {
+    param(
+        [Parameter(Mandatory)][string]$Name,
+        [Parameter(Mandatory)][string]$WinGetId
+    )
+
+    if (Get-Command $Name -ErrorAction SilentlyContinue) {
+        Write-Host "[OK] $Name disponible." -ForegroundColor Green
+        return
+    }
+
+    if ($SkipToolInstallation) {
+        throw "No se encontro '$Name' en PATH y se omitio la instalacion automatica."
+    }
+
+    if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
+        throw "No se encontro '$Name' ni WinGet. Instala App Installer desde Microsoft Store y vuelve a ejecutar el script."
+    }
+
+    Write-Host "Instalando herramienta requerida: $Name ($WinGetId)..." -ForegroundColor Yellow
+    & winget install --id $WinGetId --exact --silent --accept-package-agreements --accept-source-agreements
+    if ($LASTEXITCODE -ne 0) {
+        throw "WinGet no pudo instalar '$Name' ($WinGetId)."
+    }
+
+    Update-ProcessPath
 
     if (-not (Get-Command $Name -ErrorAction SilentlyContinue)) {
-        throw "No se encontro '$Name' en PATH."
+        throw "'$Name' fue instalado, pero la terminal aun no puede encontrarlo. Cierra VS Code, abrelo nuevamente y vuelve a ejecutar el script."
     }
+
+    Write-Host "[OK] $Name instalado y disponible." -ForegroundColor Green
 }
 
 function Wait-KubernetesApi {
@@ -53,8 +110,17 @@ function Wait-KubernetesApi {
     throw 'Kubernetes API no estuvo disponible dentro de 6 minutos. Ejecuta minikube logs --problems.'
 }
 
-foreach ($command in @('docker', 'minikube', 'kubectl', 'helm')) {
-    Assert-Command $command
+Initialize-ToolPath
+
+$requiredTools = @(
+    @{ Name = 'docker';   WinGetId = 'Docker.DockerDesktop' },
+    @{ Name = 'minikube'; WinGetId = 'Kubernetes.minikube' },
+    @{ Name = 'kubectl';  WinGetId = 'Kubernetes.kubectl' },
+    @{ Name = 'helm';     WinGetId = 'Helm.Helm' }
+)
+
+foreach ($tool in $requiredTools) {
+    Ensure-Command -Name $tool.Name -WinGetId $tool.WinGetId
 }
 
 Push-Location $projectRoot
